@@ -1,1 +1,355 @@
-# mini-raices
+from pathlib import Path
+import zipfile, textwrap
+
+html = r'''<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Raíces | Plantas que conectan contigo</title>
+  <meta name="description" content="Mini Raíces - Suculentas, cactus, plantas de interior, jardín, plantines de huerta y aromáticas.">
+  <style>
+    :root{
+      --green:#315c45;
+      --green2:#527a61;
+      --sage:#dfe9df;
+      --cream:#faf7ef;
+      --sand:#eee6d5;
+      --brown:#725c46;
+      --text:#26372d;
+      --white:#fff;
+      --shadow:0 12px 30px rgba(49,92,69,.12);
+      --radius:22px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:Arial,Helvetica,sans-serif;background:var(--cream);color:var(--text);line-height:1.5}
+    a{text-decoration:none;color:inherit}
+    button{font:inherit}
+    header{
+      position:sticky;top:0;z-index:20;background:rgba(250,247,239,.94);
+      backdrop-filter:blur(10px);border-bottom:1px solid #e6dfd0
+    }
+    .nav{max-width:1150px;margin:auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem;color:var(--green)}
+    .brand-icon{width:42px;height:42px;border-radius:50%;background:var(--sage);display:grid;place-items:center;font-size:23px}
+    nav{display:flex;gap:20px;font-size:.95rem;font-weight:600}
+    nav a:hover{color:var(--green2)}
+    .cart-btn{border:0;background:var(--green);color:white;border-radius:999px;padding:10px 16px;cursor:pointer;font-weight:700}
+    .cart-count{background:#fff;color:var(--green);border-radius:50%;padding:2px 7px;margin-left:4px}
+    .hero{max-width:1150px;margin:auto;padding:80px 20px 65px;display:grid;grid-template-columns:1.1fr .9fr;gap:45px;align-items:center}
+    .eyebrow{display:inline-block;background:var(--sage);color:var(--green);padding:7px 13px;border-radius:999px;font-weight:700;font-size:.85rem;margin-bottom:18px}
+    h1{font-size:clamp(2.6rem,6vw,5.1rem);line-height:.98;color:var(--green);letter-spacing:-2px;margin-bottom:20px}
+    .hero p{font-size:1.1rem;max-width:600px;color:#536258;margin-bottom:28px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 20px;border-radius:999px;font-weight:800;border:2px solid var(--green);transition:.2s}
+    .btn.primary{background:var(--green);color:#fff}
+    .btn.secondary{color:var(--green);background:transparent}
+    .btn:hover{transform:translateY(-2px)}
+    .hero-art{min-height:360px;border-radius:40% 40% 25% 25%;background:linear-gradient(145deg,#e5eee3,#f0e6d3);display:flex;align-items:end;justify-content:center;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .plant{font-size:10rem;filter:drop-shadow(0 15px 8px rgba(0,0,0,.08));transform:translateY(12px)}
+    .leaf{position:absolute;font-size:3rem;opacity:.75}
+    .l1{top:35px;left:45px}.l2{top:85px;right:45px}.l3{bottom:45px;left:55px}
+    section{padding:72px 20px}
+    .section-inner{max-width:1150px;margin:auto}
+    .section-title{text-align:center;margin-bottom:38px}
+    .section-title h2{font-size:2.2rem;color:var(--green);margin-bottom:8px}
+    .section-title p{color:#66736a}
+    .categories{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+    .category{background:#fff;border:1px solid #e8e2d6;padding:18px 10px;border-radius:18px;text-align:center;box-shadow:0 5px 18px rgba(0,0,0,.04)}
+    .category .emoji{font-size:2rem;display:block;margin-bottom:7px}
+    #productos{background:#f3eee3}
+    .filters{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+    .filter{border:1px solid #cfd8ce;background:#fff;color:var(--green);padding:9px 14px;border-radius:999px;cursor:pointer;font-weight:700}
+    .filter.active,.filter:hover{background:var(--green);color:#fff}
+    .products{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+    .card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+    .photo{height:190px;background:linear-gradient(135deg,#e5eee3,#eee4d3);display:grid;place-items:center;font-size:5.5rem}
+    .card-body{padding:20px;display:flex;flex-direction:column;gap:9px;flex:1}
+    .tag{font-size:.75rem;color:var(--green2);font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+    .card h3{font-size:1.3rem;color:var(--green)}
+    .card p{color:#66736a;font-size:.93rem;flex:1}
+    .price{font-size:1.2rem;font-weight:900;color:var(--brown)}
+    .buy{width:100%;border:0;background:var(--green);color:#fff;padding:12px;border-radius:12px;font-weight:800;cursor:pointer}
+    .buy:hover{background:var(--green2)}
+    .about{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+    .about-box{background:var(--sage);border-radius:30px;padding:35px}
+    .about h2{font-size:2.1rem;color:var(--green);margin-bottom:15px}
+    .values{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+    .value{background:#fff;padding:15px;border-radius:15px}
+    .care-list{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .care{background:#fff;padding:25px;border-radius:20px;box-shadow:var(--shadow)}
+    .care strong{display:block;color:var(--green);font-size:1.1rem;margin-bottom:7px}
+    .contact{background:var(--green);color:#fff}
+    .contact .section-title h2,.contact .section-title p{color:#fff}
+    .contact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .contact-card{background:rgba(255,255,255,.1);padding:25px;border-radius:20px}
+    .contact-card strong{display:block;margin-bottom:6px}
+    .contact-card a{text-decoration:underline}
+    footer{background:#234331;color:#dfe9df;text-align:center;padding:25px 20px}
+    .modal{display:none;position:fixed;inset:0;background:rgba(20,30,24,.5);z-index:50;padding:20px}
+    .modal.open{display:flex;align-items:center;justify-content:center}
+    .modal-box{background:#fff;width:min(560px,100%);max-height:90vh;overflow:auto;border-radius:25px;padding:25px;position:relative}
+    .close{position:absolute;right:18px;top:14px;border:0;background:none;font-size:25px;cursor:pointer}
+    .cart-item{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #eee}
+    .qty{display:flex;gap:6px;align-items:center}
+    .qty button{border:1px solid #ddd;background:#f5f5f5;border-radius:8px;padding:2px 8px;cursor:pointer}
+    .checkout{width:100%;margin-top:20px;background:#25d366;color:#fff;border:0;padding:14px;border-radius:12px;font-weight:900;cursor:pointer}
+    .empty{text-align:center;color:#777;padding:25px}
+    @media(max-width:900px){
+      .hero,.about{grid-template-columns:1fr}.categories{grid-template-columns:repeat(3,1fr)}
+      .products{grid-template-columns:repeat(2,1fr)}.care-list,.contact-grid{grid-template-columns:1fr}
+      nav{display:none}
+    }
+    @media(max-width:600px){
+      .hero{padding-top:50px}.hero-art{min-height:260px}.plant{font-size:7rem}
+      .categories{grid-template-columns:repeat(2,1fr)}.products{grid-template-columns:1fr}
+      .values{grid-template-columns:1fr}section{padding:55px 16px}.nav{padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <a class="brand" href="#inicio"><span class="brand-icon">🌱</span>Mini Raíces</a>
+    <nav>
+      <a href="#productos">Productos</a>
+      <a href="#nosotros">Nosotros</a>
+      <a href="#cuidados">Cuidados</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <button class="cart-btn" onclick="openCart()">🛒 Carrito <span class="cart-count" id="cartCount">0</span></button>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="inicio">
+  <div>
+    <span class="eyebrow">🌿 Plantas para llenar de vida tus espacios</span>
+    <h1>Mini<br>Raíces</h1>
+    <p>Pequeñas raíces, grandes comienzos. Encontrá plantas, plantines y opciones para crear tu propio rincón verde.</p>
+    <div class="actions">
+      <a class="btn primary" href="#productos">Ver productos</a>
+      <a class="btn secondary" href="#contacto">Contactarnos</a>
+    </div>
+  </div>
+  <div class="hero-art">
+    <span class="leaf l1">🌿</span><span class="leaf l2">🍃</span><span class="leaf l3">🌱</span>
+    <div class="plant">🪴</div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>Encontrá tu próxima planta</h2>
+      <p>Elegí una categoría y descubrí lo que tenemos disponible.</p>
+    </div>
+    <div class="categories">
+      <div class="category"><span class="emoji">🌵</span>Suculentas</div>
+      <div class="category"><span class="emoji">🌵</span>Cactus</div>
+      <div class="category"><span class="emoji">🪴</span>Interior</div>
+      <div class="category"><span class="emoji">🌳</span>Jardín</div>
+      <div class="category"><span class="emoji">🥬</span>Huerta</div>
+      <div class="category"><span class="emoji">🌿</span>Aromáticas</div>
+    </div>
+  </div>
+</section>
+
+<section id="productos">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>Productos</h2>
+      <p>Agregá tus favoritos al carrito y enviá tu pedido por WhatsApp.</p>
+    </div>
+    <div class="filters">
+      <button class="filter active" onclick="filterProducts('Todos',this)">Todos</button>
+      <button class="filter" onclick="filterProducts('Suculentas',this)">Suculentas</button>
+      <button class="filter" onclick="filterProducts('Cactus',this)">Cactus</button>
+      <button class="filter" onclick="filterProducts('Interior',this)">Interior</button>
+      <button class="filter" onclick="filterProducts('Jardín',this)">Jardín</button>
+      <button class="filter" onclick="filterProducts('Huerta',this)">Huerta</button>
+      <button class="filter" onclick="filterProducts('Aromáticas',this)">Aromáticas</button>
+    </div>
+    <div class="products" id="productGrid"></div>
+  </div>
+</section>
+
+<section id="nosotros">
+  <div class="section-inner about">
+    <div>
+      <span class="eyebrow">🌱 Sobre Mini Raíces</span>
+      <h2>Un emprendimiento que crece de a poquito.</h2>
+      <p>Mini Raíces nace con la idea de acercar plantas lindas, saludables y fáciles de cuidar, para que cada persona pueda crear su propio espacio verde.</p>
+      <div class="values">
+        <div class="value">🌿 <strong>Natural</strong><br>Productos pensados para disfrutar de la naturaleza.</div>
+        <div class="value">💚 <strong>Cercano</strong><br>Atención personalizada y simple.</div>
+        <div class="value">🌱 <strong>En crecimiento</strong><br>Nuevas variedades próximamente.</div>
+        <div class="value">🪴 <strong>Para todos</strong><br>Opciones para principiantes y amantes de las plantas.</div>
+      </div>
+    </div>
+    <div class="about-box">
+      <h2>Próximamente ✨</h2>
+      <p>Estamos preparando nuevas opciones para ampliar Mini Raíces.</p>
+      <br>
+      <p>🌸 Orquídeas</p>
+      <p>🍊 Frutales</p>
+      <p>🌿 Nuevas aromáticas</p>
+      <p>🪴 Más plantas de interior</p>
+    </div>
+  </div>
+</section>
+
+<section id="cuidados">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>Pequeños cuidados 🌱</h2>
+      <p>Porque una planta feliz empieza con buenos cuidados.</p>
+    </div>
+    <div class="care-list">
+      <div class="care"><strong>☀️ Luz</strong>Ubicá cada planta según sus necesidades. Evitá cambios bruscos de lugar.</div>
+      <div class="care"><strong>💧 Riego</strong>No todas necesitan la misma cantidad de agua. Revisá la humedad antes de regar.</div>
+      <div class="care"><strong>🌱 Tierra</strong>Usá un sustrato adecuado y con buen drenaje para evitar el exceso de agua.</div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contacto">
+  <div class="section-inner">
+    <div class="section-title">
+      <h2>¿Querés comprar? 🌿</h2>
+      <p>Armá tu carrito y mandanos el pedido por WhatsApp.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card"><strong>📱 WhatsApp</strong><a href="https://wa.me/5492604570145" target="_blank">+54 9 260 457 0145</a></div>
+      <div class="contact-card"><strong>📸 Instagram</strong><span>Agregá acá tu usuario de Instagram</span></div>
+      <div class="contact-card"><strong>🌱 Mini Raíces</strong><span>Pequeñas raíces, grandes comienzos.</span></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>© 2026 Mini Raíces · Hecho con 🌱</footer>
+
+<div class="modal" id="cartModal" onclick="if(event.target===this)closeCart()">
+  <div class="modal-box">
+    <button class="close" onclick="closeCart()">×</button>
+    <h2 style="color:#315c45;margin-bottom:18px">🛒 Tu carrito</h2>
+    <div id="cartItems"></div>
+    <div id="cartTotal" style="font-size:1.2rem;font-weight:900;text-align:right;margin-top:15px"></div>
+    <button class="checkout" onclick="sendWhatsApp()">💬 Enviar pedido por WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const WHATSAPP = "5492604570145";
+
+/* Podés cambiar nombres, descripciones y precios desde esta lista. 
+   Dejá price: 0 si todavía querés mostrar "Consultar". */
+const products = [
+  {id:1,name:"Suculenta",category:"Suculentas",emoji:"🌱",desc:"Una opción pequeña y fácil de cuidar.",price:0},
+  {id:2,name:"Cactus pequeño",category:"Cactus",emoji:"🌵",desc:"Ideal para decorar escritorios y espacios chicos.",price:0},
+  {id:3,name:"Planta de interior",category:"Interior",emoji:"🪴",desc:"Para darle un toque verde a tu casa.",price:0},
+  {id:4,name:"Planta para jardín",category:"Jardín",emoji:"🌿",desc:"Opciones para llenar de vida tus espacios exteriores.",price:0},
+  {id:5,name:"Plantín de tomate",category:"Huerta",emoji:"🍅",desc:"Ideal para comenzar tu propia huerta.",price:0},
+  {id:6,name:"Plantín de lechuga",category:"Huerta",emoji:"🥬",desc:"Una opción práctica para tu huerta.",price:0},
+  {id:7,name:"Plantín de perejil",category:"Aromáticas",emoji:"🌿",desc:"Aromática clásica para tener siempre a mano.",price:0},
+  {id:8,name:"Plantín de morrón",category:"Huerta",emoji:"🫑",desc:"Para cultivar en casa y disfrutar de tu cosecha.",price:0},
+  {id:9,name:"Caléndula",category:"Jardín",emoji:"🌼",desc:"Flor colorida y alegre para tu jardín.",price:0},
+  {id:10,name:"Planta aromática",category:"Aromáticas",emoji:"🌿",desc:"Variedades aromáticas para tu hogar o huerta.",price:0},
+  {id:11,name:"Orquídeas",category:"Interior",emoji:"🌸",desc:"Próximamente disponible.",price:0},
+  {id:12,name:"Frutales",category:"Jardín",emoji:"🍊",desc:"Próximamente disponible.",price:0}
+];
+
+let cart = [];
+let currentFilter = "Todos";
+
+function money(n){
+  return n ? "$" + n.toLocaleString("es-AR") : "Consultar";
+}
+function renderProducts(){
+  const grid=document.getElementById("productGrid");
+  const list=products.filter(p=>currentFilter==="Todos"||p.category===currentFilter);
+  grid.innerHTML=list.map(p=>`
+    <article class="card">
+      <div class="photo">${p.emoji}</div>
+      <div class="card-body">
+        <span class="tag">${p.category}</span>
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <div class="price">${money(p.price)}</div>
+        <button class="buy" onclick="addToCart(${p.id})">🛒 Agregar al carrito</button>
+      </div>
+    </article>
+  `).join("");
+}
+function filterProducts(filter,btn){
+  currentFilter=filter;
+  document.querySelectorAll(".filter").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderProducts();
+}
+function addToCart(id){
+  const item=cart.find(x=>x.id===id);
+  if(item)item.qty++;
+  else cart.push({id,qty:1});
+  updateCart();
+}
+function updateCart(){
+  document.getElementById("cartCount").textContent=cart.reduce((a,x)=>a+x.qty,0);
+  const box=document.getElementById("cartItems");
+  if(!cart.length){
+    box.innerHTML='<div class="empty">Todavía no agregaste productos 🌱</div>';
+    document.getElementById("cartTotal").textContent="";
+    return;
+  }
+  box.innerHTML=cart.map(item=>{
+    const p=products.find(x=>x.id===item.id);
+    return `<div class="cart-item">
+      <div><strong>${p.emoji} ${p.name}</strong><br><small>${money(p.price)} c/u</small></div>
+      <div class="qty">
+        <button onclick="changeQty(${p.id},-1)">−</button><span>${item.qty}</span><button onclick="changeQty(${p.id},1)">+</button>
+      </div>
+    </div>`;
+  }).join("");
+  const total=cart.reduce((sum,item)=>{
+    const p=products.find(x=>x.id===item.id);
+    return sum+(p.price*item.qty);
+  },0);
+  document.getElementById("cartTotal").textContent=total ? "Total: "+money(total) : "Total: consultar";
+}
+function changeQty(id,delta){
+  const item=cart.find(x=>x.id===id);
+  if(!item)return;
+  item.qty+=delta;
+  if(item.qty<=0)cart=cart.filter(x=>x.id!==id);
+  updateCart();
+}
+function openCart(){document.getElementById("cartModal").classList.add("open");updateCart()}
+function closeCart(){document.getElementById("cartModal").classList.remove("open")}
+function sendWhatsApp(){
+  if(!cart.length){alert("Agregá al menos un producto al carrito.");return;}
+  let text="Hola Mini Raíces 🌱 Quiero hacer este pedido:%0A%0A";
+  cart.forEach(item=>{
+    const p=products.find(x=>x.id===item.id);
+    text+=`• ${item.qty} x ${p.name}${p.price?" - "+money(p.price):""}%0A`;
+  });
+  text+="%0A¿Me pueden confirmar disponibilidad y precio final? 😊";
+  window.open(`https://wa.me/${WHATSAPP}?text=${text}`,"_blank");
+}
+renderProducts();
+updateCart();
+</script>
+</body>
+</html>
+'''
+
+base = Path("/mnt/data")
+html_path = base / "mini_raices.html"
+zip_path = base / "mini_raices_web.zip"
+html_path.write_text(html, encoding="utf-8")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    z.write(html_path, arcname="mini_raices.html")
+
+print(f"[Descargar la página HTML](sandbox:/mnt/data/mini_raices.html)")
+print(f"[Descargar el paquete ZIP](sandbox:/mnt/data/mini_raices_web.zip)")
